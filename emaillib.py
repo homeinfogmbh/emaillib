@@ -11,7 +11,7 @@ from smtplib import SMTPException
 from ssl import SSLError
 
 from .time import rfc_2822
-from .log import Logger, LogLevel
+from fancylog import Logger, LogLevel
 
 __all__ = [
     'MailerError',
