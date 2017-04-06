@@ -10,7 +10,7 @@ from email.mime.text import MIMEText
 from smtplib import SMTPException
 from ssl import SSLError
 
-from .time import rfc_2822
+from timelib import rfc_2822
 from fancylog import Logger, LogLevel
 
 __all__ = [
