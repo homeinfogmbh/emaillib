@@ -286,15 +286,16 @@ class AdminMailer():
         self.admins = admins
         self.mailer = mailer
         self.err_mail = err_mail
+        self.issuer_snapshot = None
 
-    def mails(self, issuer, message, errlvl, stacktrace):
+    def mails(self, message, errlvl, stacktrace):
         """Generate admin emails"""
         for admin in self.admins:
             yield self.err_mail(
-                admin, issuer, message,
-                errlvl, stacktrace=stacktrace)
+                admin, self.issuer_snapshot, message, errlvl,
+                stacktrace=stacktrace)
 
     def send(self, message, errlvl, stacktrace=None):
         """Send emails to administrators"""
-        issuer = IssuerSnapshot(self.issuer)
-        self.mailer.send(self.mails(issuer, message, errlvl, stacktrace))
+        self.issuer_snapshot = IssuerSnapshot(self.issuer)
+        self.mailer.send(self.mails(message, errlvl, stacktrace))
