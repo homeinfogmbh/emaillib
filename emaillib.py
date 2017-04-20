@@ -286,7 +286,7 @@ class AdminMailer():
         self.admins = admins
         self.mailer = mailer
         self.err_mail = err_mail
-        self.issuer_snapshot = None
+        self.issuer_snapshot = IssuerSnapshot(issuer)
 
     def mails(self, message, errlvl, stacktrace):
         """Generate admin emails"""
