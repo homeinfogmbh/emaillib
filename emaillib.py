@@ -1,13 +1,12 @@
 """Library for e-mailing."""
 
 from threading import Thread
-from smtplib import SMTP
+from smtplib import SMTPException, SMTP
 from email.charset import Charset
 from email.charset import QP
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
-from smtplib import SMTPException
 from ssl import SSLError
 
 from timelib import rfc_2822
