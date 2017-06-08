@@ -182,26 +182,19 @@ class ErrMail():
 
     def __call__(self, admin, issuer, message, errlvl, stacktrace=None):
         """Returns the appropriate email object"""
+        email, admin_name, wants_stacktrace = admin
         error = self.ERRLVLS.get(errlvl, 'UNKNOWN ERROR LEVEL')
         subject = self.subject_template.format(
-            application=self.application,
-            error=error,
-            issuer=issuer.name)
+            application=self.application, error=error, issuer=issuer.name)
         body = self.body_template.format(
-            name=admin.name,
-            application=self.application,
-            error=error,
-            issuer=issuer.name,
-            info=issuer.info,
-            message=message)
+            name=admin_name, application=self.application, error=error,
+            issuer=issuer.name, info=issuer.info, message=message)
 
-        if stacktrace is not None and admin.stacktrace:
+        if stacktrace is not None and wants_stacktrace:
             body = '\n'.join((body, stacktrace))
 
         return EMail(
-            subject,
-            self.sender,
-            admin.email,
+            subject, self.sender, email,
             plain=body if self.plain else None,
             html=body if self.html else None,
             charset=self.charset)
