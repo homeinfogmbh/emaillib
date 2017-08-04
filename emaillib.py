@@ -30,33 +30,29 @@ class MailerError(Exception):
         self.exceptions = exceptions
 
 
-def admins(admins_string, default_stacktrace=True):
+def admins(admins_string, wants_stacktrace=True):
     """Yields admin data from configuration file string
 
-    admin_string = <email>[:<name>[:<wants_stacktrace>]]
+    admins_string = <admin>[,<admin>...]
+    admin = <email>[:<name>[:<wants_stacktrace>]]
     """
 
     for admin in admins_string.split(','):
         admin_fields = admin.split(':')
 
         try:
-            email, name, wants_stacktrace = admin_fields
+            email, name, stacktrace_flag = admin_fields
         except ValueError:
             try:
                 email, name = admin_fields
             except ValueError:
                 email = admin
                 name = 'Administrator'
-                wants_stacktrace = default_stacktrace
-            else:
-                wants_stacktrace = default_stacktrace
         else:
-            if wants_stacktrace.strip().lower() in ('yes', 'y', 'true', '1'):
+            if stacktrace_flag.strip().lower() in ('yes', 'y', 'true', '1'):
                 wants_stacktrace = True
-            elif wants_stacktrace.strip().lower() in ('no', 'n', 'false', '0'):
+            elif stacktrace_flag.strip().lower() in ('no', 'n', 'false', '0'):
                 wants_stacktrace = False
-            else:
-                wants_stacktrace = default_stacktrace
 
         yield (email, name, wants_stacktrace)
 
