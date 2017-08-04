@@ -276,7 +276,7 @@ class AdminMailer():
     def __init__(self, issuer, admins, mailer, err_mail):
         """Initializes the admin mailer with an issuer"""
         self.issuer = issuer
-        self.admins = list(admins)
+        self.admins = admins
         self.mailer = mailer
         self.err_mail = err_mail
         self.issuer_snapshot = IssuerSnapshot(issuer)
