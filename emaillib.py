@@ -71,7 +71,7 @@ class EMail(MIMEMultipart):
     """Email data for Mailer"""
 
     def __init__(self, subject, sender, recipient, plain=None, html=None,
-                 charset='utf-8', qp=False):
+                 charset='utf-8', quoted_printable=False):
         """Creates a new EMail"""
         super().__init__(self, subtype='alternative')
         self['Subject'] = subject
@@ -81,7 +81,7 @@ class EMail(MIMEMultipart):
 
         # Set bodies
         if plain is not None:
-            if qp:
+            if quoted_printable:
                 attachment = MIMEQPText(plain, 'plain', charset)
             else:
                 attachment = MIMEText(plain, 'plain', charset)
@@ -89,7 +89,7 @@ class EMail(MIMEMultipart):
             self.attach(attachment)
 
         if html is not None:
-            if qp:
+            if quoted_printable:
                 attachment = MIMEQPText(html, 'html', charset)
             else:
                 attachment = MIMEText(html, 'html', charset)
