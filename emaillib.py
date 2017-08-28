@@ -103,7 +103,7 @@ class EMail(MIMEMultipart):
     @property
     def subject(self):
         """Returns the Email's subject"""
-        self['Subject']
+        return self['Subject']
 
     @property
     def sender(self):
@@ -139,15 +139,16 @@ class Mailer():
 
     def __str__(self):
         return '{}:*****@{}:{}'.format(
-            self.login_name, self.smtp_server, self._smtp_port)
+            self.login_name, self.smtp_server, self.smtp_port)
 
-    def send(self, emails, fg=False):
+    def send(self, emails, background=True):
         """Sends email in a sub thread to not block the system"""
-        if fg:
-            return self._send(emails)
-        else:
+        if background:
             sending = Thread(target=self._send, args=[emails])
             sending.start()
+            return sending
+
+        return self._send(emails)
 
     def _send(self, emails):
         """Sends email"""
@@ -160,9 +161,9 @@ class Mailer():
                 except (SSLError, SMTPException):
                     if self.ssl is True:
                         raise
-                    else:
-                        self.logger.warning(
-                            'Connecting without SSL/TLS encryption')
+
+                    self.logger.warning(
+                        'Connecting without SSL/TLS encryption.')
 
             smtp.ehlo()
             smtp.login(self.login_name, self._passwd)
@@ -171,13 +172,13 @@ class Mailer():
             for email in emails:
                 try:
                     smtp.send_message(email)
-                except Exception as e:
-                    failures.append((email, e))
+                except Exception as exception:
+                    failures.append((email, exception))
 
             smtp.quit()
 
         for email, exception in failures:
-            self.logger.error('Could not send: {}\nReason: {}'.format(
+            self.logger.error('Could not send: {}.\nReason: {}.'.format(
                 email, exception))
 
         return not failures
@@ -232,8 +233,8 @@ class ErrMail():
         """Returns the subject template"""
         if self._subject_template is None:
             return self.SUBJECT_TEMPLATE
-        else:
-            return self._subject_template
+
+        return self._subject_template
 
     @subject_template.setter
     def subject_template(self, subject_template):
@@ -245,8 +246,8 @@ class ErrMail():
         """Returns the body template"""
         if self._body_template is None:
             return self.BODY_TEMPLATE
-        else:
-            return self._body_template
+
+        return self._body_template
 
     @body_template.setter
     def body_template(self, body_template):
