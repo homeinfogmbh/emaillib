@@ -204,8 +204,8 @@ class ErrMail():
         """Generate mail"""
         self.application = application
         self.sender = sender
-        self.subject_template = subject_template
-        self.body_template = body_template
+        self._subject_template = subject_template
+        self._body_template = body_template
         self.html = html
         self.charset = charset
 
@@ -255,24 +255,14 @@ class ErrMail():
         self._body_template = body_template
 
     @property
-    def html(self):
-        """Determines whether the body is HTML"""
-        return self._html
-
-    @html.setter
-    def html(self, html):
-        """Sets flag for HTML body"""
-        self._html = html
-
-    @property
     def plain(self):
         """Determines whether the body is plain text"""
-        return not self._html
+        return not self.html
 
     @plain.setter
     def plain(self, plain):
         """Sets flag for plain text body"""
-        self._html = not plain
+        self.html = not plain
 
 
 class IssuerSnapshot():
