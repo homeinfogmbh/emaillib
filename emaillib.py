@@ -14,7 +14,7 @@ from fancylog import Logger, LogLevel
 
 __all__ = [
     'MailerError',
-    'admins',
+    'load_admins',
     'Mailer',
     'EMail',
     'ErrMail',
@@ -30,7 +30,7 @@ class MailerError(Exception):
         self.exceptions = exceptions
 
 
-def admins(admins_string, wants_stacktrace=True):
+def load_admins(admins_string, wants_stacktrace=True):
     """Yields admin data from configuration file string
 
     admins_string = <admin>[,<admin>...]
