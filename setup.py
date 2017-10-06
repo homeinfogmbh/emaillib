@@ -5,7 +5,10 @@ from distutils.core import setup
 setup(
     name='emaillib',
     version='latest',
-    author='Richard Neumann',
+    author='HOMEINFO - Digitale Informationssysteme GmbH',
+    author_email='info@homeinfo.de',
+    maintainer='Richard Neumann',
+    maintainer_email='r.neumann@homeinfo.de',
     py_modules=['emaillib'],
-    license=open('LICENSE').read(),
-    description='An enhanced emailing library')
+    license='GPLv3',
+    description='An enhanced emailing library.')
