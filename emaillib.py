@@ -23,7 +23,7 @@ __all__ = [
 
 
 class MailerError(Exception):
-    """Indicates errors during sending mails"""
+    """Indicates errors during sending mails."""
 
     def __init__(self, exceptions):
         super().__init__(str(exceptions))
@@ -31,7 +31,7 @@ class MailerError(Exception):
 
 
 def load_admins(admins_string, wants_stacktrace=True):
-    """Yields admin data from configuration file string
+    """Yields admin data from configuration file string.
 
     admins_string = <admin>[,<admin>...]
     admin = <email>[:<name>[:<wants_stacktrace>]]
@@ -58,7 +58,7 @@ def load_admins(admins_string, wants_stacktrace=True):
 
 
 class MIMEQPText(MIMENonMultipart):
-    """A quoted-printable encoded text"""
+    """A quoted-printable encoded text."""
 
     def __init__(self, payload, subtype='plain', charset='utf-8'):
         super().__init__('text', subtype, charset=charset)
@@ -68,11 +68,11 @@ class MIMEQPText(MIMENonMultipart):
 
 
 class EMail(MIMEMultipart):
-    """Email data for Mailer"""
+    """Email data for Mailer."""
 
     def __init__(self, subject, sender, recipient, plain=None, html=None,
                  charset='utf-8', quoted_printable=False):
-        """Creates a new EMail"""
+        """Creates a new EMail."""
         super().__init__(self, subtype='alternative')
         self['Subject'] = subject
         self['From'] = sender
@@ -97,31 +97,31 @@ class EMail(MIMEMultipart):
             self.attach(attachment)
 
     def __str__(self):
-        """Converts the EMail to a string"""
+        """Converts the EMail to a string."""
         return self.as_string()
 
     @property
     def subject(self):
-        """Returns the Email's subject"""
+        """Returns the Email's subject."""
         return self['Subject']
 
     @property
     def sender(self):
-        """Returns the Email's sender"""
+        """Returns the Email's sender."""
         return self['From']
 
     @property
     def recipient(self):
-        """Returns the Email's recipient"""
+        """Returns the Email's recipient."""
         return self['To']
 
 
-class Mailer():
-    """A simple SMTP mailer"""
+class Mailer:
+    """A simple SMTP mailer."""
 
     def __init__(self, smtp_server, smtp_port, login_name, passwd,
                  ssl=None, logger=None):
-        """Initializes the email with basic content"""
+        """Initializes the email with basic content."""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.login_name = login_name
@@ -134,7 +134,7 @@ class Mailer():
             self.logger = logger.inherit(self.__class__.__name__)
 
     def __call__(self, emails):
-        """Alias to self.send()"""
+        """Alias to self.send()."""
         return self.send(emails)
 
     def __str__(self):
@@ -142,7 +142,7 @@ class Mailer():
             self.login_name, self.smtp_server, self.smtp_port)
 
     def send(self, emails, background=True):
-        """Sends email in a sub thread to not block the system"""
+        """Sends email in a sub thread to not block the system."""
         if background:
             sending = Thread(target=self._send, args=[emails])
             sending.start()
@@ -151,7 +151,7 @@ class Mailer():
         return self._send(emails)
 
     def _send(self, emails):
-        """Sends email"""
+        """Sends emails."""
         failures = []
 
         with SMTP(self.smtp_server, self.smtp_port) as smtp:
@@ -184,8 +184,8 @@ class Mailer():
         return not failures
 
 
-class ErrMail():
-    """Error mail factory"""
+class ErrMail:
+    """Error mail factory."""
 
     ERRLVLS = {
         LogLevel.WARNING: 'WARNING',
@@ -201,7 +201,7 @@ class ErrMail():
 
     def __init__(self, application, sender, subject_template=None,
                  body_template=None, html=False, charset='utf-8'):
-        """Generate mail"""
+        """Generate mail."""
         self.application = application
         self.sender = sender
         self._subject_template = subject_template
@@ -210,7 +210,7 @@ class ErrMail():
         self.charset = charset
 
     def __call__(self, admin, issuer, message, errlvl, stacktrace=None):
-        """Returns the appropriate email object"""
+        """Returns the appropriate email object."""
         email, admin_name, wants_stacktrace = admin
         error = self.ERRLVLS.get(errlvl, 'UNKNOWN ERROR LEVEL')
         subject = self.subject_template.format(
@@ -230,7 +230,7 @@ class ErrMail():
 
     @property
     def subject_template(self):
-        """Returns the subject template"""
+        """Returns the subject template."""
         if self._subject_template is None:
             return self.SUBJECT_TEMPLATE
 
@@ -238,12 +238,12 @@ class ErrMail():
 
     @subject_template.setter
     def subject_template(self, subject_template):
-        """Sets the subject template"""
+        """Sets the subject template."""
         self._subject_template = subject_template
 
     @property
     def body_template(self):
-        """Returns the body template"""
+        """Returns the body template."""
         if self._body_template is None:
             return self.BODY_TEMPLATE
 
@@ -251,25 +251,25 @@ class ErrMail():
 
     @body_template.setter
     def body_template(self, body_template):
-        """Sets the body template"""
+        """Sets the body template."""
         self._body_template = body_template
 
     @property
     def plain(self):
-        """Determines whether the body is plain text"""
+        """Determines whether the body is plain text."""
         return not self.html
 
     @plain.setter
     def plain(self, plain):
-        """Sets flag for plain text body"""
+        """Sets flag for plain text body."""
         self.html = not plain
 
 
-class IssuerSnapshot():
-    """Wrapper for issuers to snapshot volatile data"""
+class IssuerSnapshot:
+    """Wrapper for issuers to snapshot volatile data."""
 
     def __init__(self, issuer):
-        """Snapshots volatile data"""
+        """Snapshots volatile data."""
         self.issuer = issuer
         self.str = str(issuer)
         self.repr = repr(issuer)
@@ -289,11 +289,11 @@ class IssuerSnapshot():
         return self.repr
 
 
-class AdminMailer():
-    """A mailer wrapper to easily send emails to admins"""
+class AdminMailer:
+    """A mailer wrapper to easily send emails to admins."""
 
     def __init__(self, issuer, admins, mailer, err_mail):
-        """Initializes the admin mailer with an issuer"""
+        """Initializes the admin mailer with an issuer."""
         self.issuer = issuer
         self.admins = admins
         self.mailer = mailer
@@ -301,13 +301,13 @@ class AdminMailer():
         self.issuer_snapshot = IssuerSnapshot(issuer)
 
     def mails(self, message, errlvl, stacktrace):
-        """Generate admin emails"""
+        """Generate admin emails."""
         for admin in self.admins:
             yield self.err_mail(
                 admin, self.issuer_snapshot, message, errlvl,
                 stacktrace=stacktrace)
 
     def send(self, message, errlvl, stacktrace=None):
-        """Send emails to administrators"""
+        """Send emails to administrators."""
         self.issuer_snapshot = IssuerSnapshot(self.issuer)
         self.mailer.send(self.mails(message, errlvl, stacktrace))
