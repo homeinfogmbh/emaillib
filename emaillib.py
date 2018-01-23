@@ -155,11 +155,11 @@ class Mailer:
         failures = []
 
         with SMTP(self.smtp_server, self.smtp_port) as smtp:
-            if self.ssl is not False:
+            if self.ssl is None or self.ssl:
                 try:
                     smtp.starttls()
                 except (SSLError, SMTPException):
-                    if self.ssl is True:
+                    if self.ssl:
                         raise
 
                     self.logger.warning(
