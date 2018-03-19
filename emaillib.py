@@ -78,27 +78,36 @@ class EMail(MIMEMultipart):
         self['From'] = sender
         self['To'] = recipient
         self['Date'] = rfc_2822()
-
-        # Set bodies
+        self.charset = charset
+        self.quoted_printable = quoted_printable
+        # Set bodies after setting charset and quoted_printable.
         if plain is not None:
-            if quoted_printable:
-                attachment = MIMEQPText(plain, 'plain', charset)
-            else:
-                attachment = MIMEText(plain, 'plain', charset)
-
-            self.attach(attachment)
+            self.add_plain(plain)
 
         if html is not None:
-            if quoted_printable:
-                attachment = MIMEQPText(html, 'html', charset)
-            else:
-                attachment = MIMEText(html, 'html', charset)
-
-            self.attach(attachment)
+            self.add_html(html)
 
     def __str__(self):
         """Converts the EMail to a string."""
         return self.as_string()
+
+    def add_plain(self, plain):
+        """Adds a plain text body."""
+        if self.quoted_printable:
+            attachment = MIMEQPText(plain, 'plain', self.charset)
+        else:
+            attachment = MIMEText(plain, 'plain', self.charset)
+
+        self.attach(attachment)
+
+    def add_html(self, html):
+        """Add an HTML body."""
+        if self.quoted_printable:
+            attachment = MIMEQPText(html, 'html', self.charset)
+        else:
+            attachment = MIMEText(html, 'html', self.charset)
+
+        self.attach(attachment)
 
     @property
     def subject(self):
@@ -152,7 +161,7 @@ class Mailer:
 
     def _send(self, emails):
         """Sends emails."""
-        failures = []
+        result = True
 
         with SMTP(self.smtp_server, self.smtp_port) as smtp:
             if self.ssl is None or self.ssl:
@@ -168,20 +177,18 @@ class Mailer:
             smtp.ehlo()
             smtp.login(self.login_name, self._passwd)
 
-            # Actually send emails
+            # Actually send emails.
             for email in emails:
                 try:
                     smtp.send_message(email)
                 except Exception as exception:
-                    failures.append((email, exception))
+                    result = False
+                    self.logger.error('Caught exception: {}.'.format(
+                        exception))
 
             smtp.quit()
 
-        for email, exception in failures:
-            self.logger.error('Could not send: {}.\nReason: {}.'.format(
-                email, exception))
-
-        return not failures
+        return result
 
 
 class ErrMail:
