@@ -1,5 +1,6 @@
 """Library for e-mailing."""
 
+from logging import CRITICAL, ERROR, WARNING, getLogger
 from threading import Thread
 from smtplib import SMTPException, SMTP
 from email.charset import Charset
@@ -10,7 +11,6 @@ from email.mime.text import MIMEText
 from ssl import SSLError
 
 from timelib import rfc_2822
-from fancylog import Logger, LogLevel
 
 __all__ = [
     'MailerError',
@@ -138,9 +138,9 @@ class Mailer:
         self.ssl = ssl
 
         if logger is None:
-            self.logger = Logger(self.__class__.__name__)
+            self.logger = getLogger(self.__class__.__name__)
         else:
-            self.logger = logger.inherit(self.__class__.__name__)
+            self.logger = logger.getChild(self.__class__.__name__)
 
     def __call__(self, emails):
         """Alias to self.send()."""
@@ -183,8 +183,7 @@ class Mailer:
                     smtp.send_message(email)
                 except Exception as exception:
                     result = False
-                    self.logger.error('Caught exception: {}.'.format(
-                        exception))
+                    self.logger.error('Caught exception: %s.', exception)
 
             smtp.quit()
 
@@ -195,9 +194,9 @@ class ErrMail:
     """Error mail factory."""
 
     ERRLVLS = {
-        LogLevel.WARNING: 'WARNING',
-        LogLevel.ERROR: 'ERROR',
-        LogLevel.CRITICAL: 'CRITICAL ERROR'}
+        WARNING: 'WARNING',
+        ERROR: 'ERROR',
+        CRITICAL: 'CRITICAL ERROR'}
     SUBJECT_TEMPLATE = '{application}: {error} in {issuer}'
     BODY_TEMPLATE = (
         'Dear {name},\n\n'
