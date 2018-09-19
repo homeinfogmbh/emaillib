@@ -9,7 +9,9 @@ from smtplib import SMTPException, SMTP
 from ssl import SSLError
 from threading import Thread
 
+from configlib import parse_bool
 from timelib import rfc_2822
+
 
 __all__ = [
     'MailerError',
@@ -148,6 +150,33 @@ class Mailer:
     def __str__(self):
         return '{}:*****@{}:{}'.format(
             self.login_name, self.smtp_server, self.smtp_port)
+
+    @classmethod
+    def from_config(cls, config, logger=None):
+        """Returns a new mailer instance from the provided configuration."""
+        smtp_server = config.get('smtp_server', config.get('host'))
+
+        if smtp_server is None:
+            raise ValueError('No SMTP server specified.')
+
+        smtp_port = int(config.get('smtp_port', config.get('port')))
+
+        if smtp_port is None:
+            raise ValueError('No SMTP port specified.')
+
+        login_name = config.get('login_name', config.get('user'))
+
+        if login_name is None:
+            raise ValueError('No login nane specified.')
+
+        passwd = config.get('passwd', config.get('password'))
+
+        if passwd is None:
+            raise ValueError('No password specified.')
+
+        ssl = parse_bool(config.get('ssl', False))
+        return cls(smtp_server, smtp_port, login_name, passwd, ssl=ssl,
+                   logger=logger)
 
     def send(self, emails, background=True):
         """Sends email in a sub thread to not block the system."""
