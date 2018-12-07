@@ -9,7 +9,6 @@ from smtplib import SMTPException, SMTP
 from ssl import SSLError
 from threading import Thread
 
-from configlib import parse_bool
 from timelib import rfc_2822
 
 
@@ -174,7 +173,7 @@ class Mailer:
         if passwd is None:
             raise ValueError('No password specified.')
 
-        ssl = parse_bool(config.get('ssl', False))
+        ssl = config.getboolean('ssl', False)
         return cls(smtp_server, smtp_port, login_name, passwd, ssl=ssl,
                    logger=logger)
 
