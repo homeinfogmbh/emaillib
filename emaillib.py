@@ -202,7 +202,7 @@ class Mailer:
                     self.logger.warning(
                         'Connecting without SSL/TLS encryption.')
 
-            smtp.ehlo()
+            #smtp.ehlo()
             smtp.login(self.login_name, self._passwd)
 
             # Actually send emails.
