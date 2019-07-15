@@ -5,8 +5,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 from logging import CRITICAL, ERROR, WARNING, getLogger
-from smtplib import SMTPException, SMTP
-from ssl import SSLError
+from smtplib import SMTP
 from threading import Thread
 
 from timelib import rfc_2822
@@ -129,7 +128,7 @@ class Mailer:
     """A simple SMTP mailer."""
 
     def __init__(self, smtp_server, smtp_port, login_name, passwd,
-                 ssl=None, logger=None):
+                 ssl=False, logger=None):
         """Initializes the email with basic content."""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
@@ -191,15 +190,10 @@ class Mailer:
         result = True
 
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
-            if self.ssl is None or self.ssl:
-                try:
-                    smtp.starttls()
-                except (SSLError, SMTPException):
-                    if self.ssl:
-                        raise
-
-                    self.logger.warning(
-                        'Connecting without SSL/TLS encryption.')
+            if self.ssl:
+                smtp.starttls()
+            else:
+                self.logger.warning('Connecting without SSL/TLS encryption.')
 
             smtp.ehlo()
             smtp.login(self.login_name, self._passwd)
