@@ -189,8 +189,9 @@ class Mailer:
     def _send(self, emails):
         """Sends emails."""
         result = True
+        print('DEBUG:', self.smtp_server, self.smtp_port, flush=True)
 
-        with SMTP(self.smtp_server, self.smtp_port) as smtp:
+        with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if self.ssl is None or self.ssl:
                 try:
                     smtp.starttls()
