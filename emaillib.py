@@ -189,8 +189,6 @@ class Mailer:
     def _send(self, emails):
         """Sends emails."""
         result = True
-        print('DEBUG:', self.smtp_server, self.login_name, self._passwd,
-              self.smtp_port, flush=True)
 
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if self.ssl is None or self.ssl:
@@ -203,7 +201,7 @@ class Mailer:
                     self.logger.warning(
                         'Connecting without SSL/TLS encryption.')
 
-            #smtp.ehlo()
+            smtp.ehlo()
             smtp.login(self.login_name, self._passwd)
 
             # Actually send emails.
