@@ -1,7 +1,7 @@
 """Library for e-mailing."""
 
 from __future__ import annotations
-from configparser import SectionProxy
+from configparser import ConfigParser, SectionProxy
 from email.charset import Charset, QP
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
@@ -14,11 +14,10 @@ from typing import Generator, Iterable, NamedTuple
 from timelib import rfc_2822
 
 
-__all__ = ['Admin', 'EMail', 'Mailer', 'load_admins']
+__all__ = ['Admin', 'EMail', 'Mailer']
 
 
 LOGGER = getLogger('emaillib')
-NO = {'no', 'n', 'false', '0'}
 YES = {'yes', 'y', 'true', '1'}
 
 
@@ -29,35 +28,47 @@ class Admin(NamedTuple):
     name: str
     wants_stacktrace: bool
 
+    @classmethod
+    def from_string(cls, string: str) -> Admin:
+        """Returns an admin setting from a string.
 
-AdminsGenerator = Generator[Admin, None, None]
-
-
-def load_admins(string: str, wants_stacktrace: bool = True) -> AdminsGenerator:
-    """Yields admin data from configuration file string.
-
-    string = <admin>[,<admin>...]
-    admin = <email>[:<name>[:<wants_stacktrace>]]
-    """
-
-    for admin in string.split(','):
-        admin_fields = admin.split(':')
-
+        string = <email>[:<name>[:<wants_stacktrace>]]
+        """
         try:
-            email, name, stacktrace_flag = admin_fields
+            email, name, wants_stacktrace_str = string.split(':')
         except ValueError:
             try:
-                email, name = admin_fields
+                email, name = string.split(':')
             except ValueError:
-                email = admin
+                email = string
                 name = 'Administrator'
-        else:
-            if stacktrace_flag.strip().casefold() in YES:
-                wants_stacktrace = True
-            elif stacktrace_flag.strip().casefold() in NO:
                 wants_stacktrace = False
+            else:
+                wants_stacktrace = False
+        else:
+            wants_stacktrace = wants_stacktrace_str.strip().casefold() in YES
 
-        yield Admin(email, name, wants_stacktrace)
+        return cls(email, name, wants_stacktrace)
+
+    @classmethod
+    def load(cls, string: str) -> Generator[Admin, None, None]:
+        """Yields admin data from configuration file string.
+
+        string = <admin>[,<admin>...]
+        admin = <email>[:<name>[:<wants_stacktrace>]]
+        """
+        for admin in string.split(','):
+            yield Admin.from_string(admin)
+
+    @classmethod
+    def from_section(cls, sec: SectionProxy) -> Generator[Admin, None, None]:
+        """Yields admins from the given config section."""
+        return cls.load(sec['admins'])
+
+    @classmethod
+    def from_config(cls, config: ConfigParser) -> Generator[Admin, None, None]:
+        """Yieds admins from the given config parser."""
+        return cls.from_section(config['email'])
 
 
 class MIMEQPText(MIMENonMultipart):
@@ -150,30 +161,35 @@ class Mailer:
         return f'{self.login_name}:*****@{self.smtp_server}:{self.smtp_port}'
 
     @classmethod
-    def from_config(cls, config: SectionProxy) -> Mailer:
-        """Returns a new mailer instance from the provided configuration."""
-        smtp_server = config.get('smtp_server', config.get('host'))
+    def from_section(cls, section: SectionProxy) -> Mailer:
+        """Returns a new mailer instance from the provided config section."""
+        smtp_server = section.get('smtp_server', section.get('host'))
 
         if smtp_server is None:
             raise ValueError('No SMTP server specified.')
 
-        smtp_port = int(config.get('smtp_port', config.get('port')))
+        smtp_port = section.getint('smtp_port', section.getint('port'))
 
         if smtp_port is None:
             raise ValueError('No SMTP port specified.')
 
-        login_name = config.get('login_name', config.get('user'))
+        login_name = section.get('login_name', section.get('user'))
 
         if login_name is None:
             raise ValueError('No login nane specified.')
 
-        passwd = config.get('passwd', config.get('password'))
+        passwd = section.get('passwd', section.get('password'))
 
         if passwd is None:
             raise ValueError('No password specified.')
 
-        ssl = config.getboolean('ssl', False)
+        ssl = section.getboolean('ssl', False)
         return cls(smtp_server, smtp_port, login_name, passwd, ssl=ssl)
+
+    @classmethod
+    def from_config(cls, config: ConfigParser) -> Mailer:
+        """Returns a new mailer instance from the provided config."""
+        return cls.from_section(config['email'])
 
     def send(self, emails: Iterable[EMail], background: bool = True) -> bool:
         """Sends email in a sub thread to not block the system."""
