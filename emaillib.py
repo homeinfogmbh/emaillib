@@ -10,64 +10,13 @@ from email.utils import formatdate
 from logging import getLogger
 from smtplib import SMTPException, SMTP
 from threading import Thread
-from typing import Generator, Iterable, NamedTuple
+from typing import Iterable
 
 
-__all__ = ['Admin', 'EMail', 'Mailer']
+__all__ = ['EMail', 'Mailer']
 
 
 LOGGER = getLogger('emaillib')
-YES = {'yes', 'y', 'true', '1'}
-
-
-class Admin(NamedTuple):
-    """Represents admins."""
-
-    email: str
-    name: str
-    wants_stacktrace: bool
-
-    @classmethod
-    def from_string(cls, string: str) -> Admin:
-        """Returns an admin setting from a string.
-
-        string = <email>[:<name>[:<wants_stacktrace>]]
-        """
-        try:
-            email, name, wants_stacktrace_str = string.split(':')
-        except ValueError:
-            try:
-                email, name = string.split(':')
-            except ValueError:
-                email = string
-                name = 'Administrator'
-                wants_stacktrace = False
-            else:
-                wants_stacktrace = False
-        else:
-            wants_stacktrace = wants_stacktrace_str.strip().casefold() in YES
-
-        return cls(email, name, wants_stacktrace)
-
-    @classmethod
-    def load(cls, string: str) -> Generator[Admin, None, None]:
-        """Yields admin data from configuration file string.
-
-        string = <admin>[,<admin>...]
-        admin = <email>[:<name>[:<wants_stacktrace>]]
-        """
-        for admin in string.split(','):
-            yield Admin.from_string(admin)
-
-    @classmethod
-    def from_section(cls, sec: SectionProxy) -> Generator[Admin, None, None]:
-        """Yields admins from the given config section."""
-        return cls.load(sec['admins'])
-
-    @classmethod
-    def from_config(cls, config: ConfigParser) -> Generator[Admin, None, None]:
-        """Yieds admins from the given config parser."""
-        return cls.from_section(config['email'])
 
 
 class MIMEQPText(MIMENonMultipart):
