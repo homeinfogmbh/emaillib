@@ -190,15 +190,6 @@ class Mailer:
         """Returns a new mailer instance from the provided config."""
         return cls.from_section(config['email'])
 
-    def send(self, emails: Iterable[EMail], background: bool = True) -> bool:
-        """Sends email in a sub thread to not block the system."""
-        if background:
-            sending = Thread(target=self._send, args=[emails])
-            sending.start()
-            return sending
-
-        return self._send(emails)
-
     def _send(self, emails: Iterable[EMail]) -> bool:
         """Sends emails."""
         result = True
@@ -223,3 +214,12 @@ class Mailer:
             smtp.quit()
 
         return result
+
+    def send(self, emails: Iterable[EMail], background: bool = True) -> bool:
+        """Sends email in a sub thread to not block the system."""
+        if background:
+            sending = Thread(target=self._send, args=[emails])
+            sending.start()
+            return sending
+
+        return self._send(emails)
