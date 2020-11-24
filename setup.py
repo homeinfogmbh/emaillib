@@ -11,4 +11,5 @@ setup(
     maintainer_email='<r dot neumann at homeinfo priod de>',
     py_modules=['emaillib'],
     license='GPLv3',
-    description='An enhanced emailing library.')
+    description='An enhanced emailing library.'
+)
