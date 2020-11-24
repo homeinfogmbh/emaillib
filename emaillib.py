@@ -6,12 +6,11 @@ from email.charset import Charset, QP
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
+from email.utils import formatdate
 from logging import getLogger
 from smtplib import SMTPException, SMTP
 from threading import Thread
 from typing import Generator, Iterable, NamedTuple
-
-from timelib import rfc_2822
 
 
 __all__ = ['Admin', 'EMail', 'Mailer']
@@ -93,7 +92,7 @@ class EMail(MIMEMultipart):
         self['Subject'] = subject
         self['From'] = sender
         self['To'] = recipient
-        self['Date'] = rfc_2822()
+        self['Date'] = formatdate(localtime=True, usegmt=True)
         self.charset = charset
         self.quoted_printable = quoted_printable
         # Set bodies after setting charset and quoted_printable.
