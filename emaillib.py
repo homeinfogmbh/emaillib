@@ -14,11 +14,7 @@ from typing import Generator, Iterable, NamedTuple
 from timelib import rfc_2822
 
 
-__all__ = [
-    'load_admins',
-    'Mailer',
-    'EMail'
-]
+__all__ = ['EMail', 'Mailer', 'load_admins']
 
 
 LOGGER = getLogger('emaillib')
