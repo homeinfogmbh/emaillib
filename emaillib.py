@@ -116,9 +116,9 @@ class Mailer:
         if smtp_server is None:
             raise ValueError('No SMTP server specified.')
 
-        smtp_port = section.getint('smtp_port', section.getint('port'))
+        port = section.getint('smtp_port', fallback=section.getint('port'))
 
-        if smtp_port is None:
+        if port is None:
             raise ValueError('No SMTP port specified.')
 
         login_name = section.get('login_name', section.get('user'))
@@ -131,8 +131,8 @@ class Mailer:
         if passwd is None:
             raise ValueError('No password specified.')
 
-        ssl = section.getboolean('ssl', False)
-        return cls(smtp_server, smtp_port, login_name, passwd, ssl=ssl)
+        ssl = section.getboolean('ssl', fallback=False)
+        return cls(smtp_server, port, login_name, passwd, ssl=ssl)
 
     @classmethod
     def from_config(cls, config: ConfigParser) -> Mailer:
