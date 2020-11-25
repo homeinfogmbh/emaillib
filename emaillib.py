@@ -164,6 +164,7 @@ class Mailer:
                 try:
                     smtp.send_message(email)
                 except SMTPException as error:
+                    LOGGER.warning('Could not send email: %s', email)
                     LOGGER.error(str(error))
                     result = False
 
