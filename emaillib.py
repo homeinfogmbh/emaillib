@@ -145,22 +145,27 @@ class Mailer:
 
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if self.ssl:
-                smtp.starttls()
+                try:
+                    smtp.starttls()
+                except (SMTPException, RuntimeError, ValueError) as error:
+                    LOGGER.error(str(error))
+                    return False
             else:
                 LOGGER.warning('Connecting without SSL/TLS encryption.')
 
-            smtp.ehlo()
-            smtp.login(self.login_name, self._passwd)
+            try:
+                smtp.ehlo()
+                smtp.login(self.login_name, self._passwd)
+            except SMTPException as error:
+                LOGGER.error(str(error))
+                return False
 
-            # Actually send emails.
             for email in emails:
                 try:
                     smtp.send_message(email)
                 except SMTPException as error:
                     LOGGER.error(str(error))
                     result = False
-
-            smtp.quit()
 
         return result
 
