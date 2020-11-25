@@ -9,7 +9,6 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from logging import getLogger
 from smtplib import SMTPException, SMTP
-from threading import Thread
 from typing import Iterable
 
 
@@ -139,7 +138,7 @@ class Mailer:
         """Returns a new mailer instance from the provided config."""
         return cls.from_section(config['email'])
 
-    def _send(self, emails: Iterable[EMail]) -> bool:
+    def send(self, emails: Iterable[EMail]) -> bool:
         """Sends emails."""
         result = True
 
@@ -169,12 +168,3 @@ class Mailer:
                     result = False
 
         return result
-
-    def send(self, emails: Iterable[EMail], background: bool = True) -> bool:
-        """Sends email in a sub thread to not block the system."""
-        if background:
-            sending = Thread(target=self._send, args=[emails])
-            sending.start()
-            return sending
-
-        return self._send(emails)
