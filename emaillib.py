@@ -41,36 +41,17 @@ class EMail(MIMEMultipart):
         self['From'] = sender
         self['To'] = recipient
         self['Date'] = formatdate(localtime=True, usegmt=True)
-        self.charset = charset
-        self.quoted_printable = quoted_printable
-        # Set bodies after setting charset and quoted_printable.
+        text_type = MIMEQPText if quoted_printable else MIMEText
+
         if plain is not None:
-            self.add_plain(plain)
+            self.attach(text_type(plain, 'plain', charset))
 
         if html is not None:
-            self.add_html(html)
+            self.attach(text_type(plain, 'html', charset))
 
     def __str__(self):
         """Converts the EMail to a string."""
         return self.as_string()
-
-    def add_plain(self, plain: str):
-        """Adds a plain text body."""
-        if self.quoted_printable:
-            attachment = MIMEQPText(plain, 'plain', self.charset)
-        else:
-            attachment = MIMEText(plain, 'plain', self.charset)
-
-        self.attach(attachment)
-
-    def add_html(self, html: str):
-        """Add an HTML body."""
-        if self.quoted_printable:
-            attachment = MIMEQPText(html, 'html', self.charset)
-        else:
-            attachment = MIMEText(html, 'html', self.charset)
-
-        self.attach(attachment)
 
     @property
     def subject(self):
