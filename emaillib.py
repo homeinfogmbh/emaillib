@@ -73,7 +73,7 @@ class Mailer:
     """A simple SMTP mailer."""
 
     def __init__(self, smtp_server: str, smtp_port: int, login_name: str,
-                 passwd: str, ssl: bool = False):
+                 passwd: str, *, ssl: bool = False):
         """Initializes the email with basic content."""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
