@@ -47,7 +47,7 @@ class EMail(MIMEMultipart):
             self.attach(text_type(plain, 'plain', charset))
 
         if html is not None:
-            self.attach(text_type(plain, 'html', charset))
+            self.attach(text_type(html, 'html', charset))
 
     def __str__(self):
         """Converts the EMail to a string."""
