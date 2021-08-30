@@ -18,6 +18,25 @@ __all__ = ['EMail', 'Mailer']
 LOGGER = getLogger('emaillib')
 
 
+def send_email(smtp: SMTP, email: EMail):
+    """Sends an email via the given SMTP connection."""
+
+    try:
+        smtp.send_message(email)
+    except SMTPException as error:
+        LOGGER.warning('Could not send email: %s', email)
+        LOGGER.error(str(error))
+        return False
+
+    return True
+
+
+def send_emails(smtp: SMTP, emails: Iterable[EMail]):
+    """Sends emails via the given SMTP connection."""
+
+    return all(send_email(smtp, email) for email in emails)
+
+
 class MIMEQPText(MIMENonMultipart):
     """A quoted-printable encoded text."""
 
@@ -119,33 +138,35 @@ class Mailer:
         """Returns a new mailer instance from the provided config."""
         return cls.from_section(config['email'])
 
-    def send(self, emails: Iterable[EMail]) -> bool:
-        """Sends emails."""
-        result = True
-
-        with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
-            if self.ssl:
-                try:
-                    smtp.starttls()
-                except (SMTPException, RuntimeError, ValueError) as error:
-                    LOGGER.error(str(error))
-                    return False
-            else:
-                LOGGER.warning('Connecting without SSL/TLS encryption.')
-
+    def _starttls(self, smtp: SMTP) -> bool:
+        """Start TLS connection if desired."""
+        if self.ssl:
             try:
-                smtp.ehlo()
-                smtp.login(self.login_name, self._passwd)
-            except SMTPException as error:
+                smtp.starttls()
+            except (SMTPException, RuntimeError, ValueError) as error:
                 LOGGER.error(str(error))
                 return False
 
-            for email in emails:
-                try:
-                    smtp.send_message(email)
-                except SMTPException as error:
-                    LOGGER.warning('Could not send email: %s', email)
-                    LOGGER.error(str(error))
-                    result = False
+            return True
 
-        return result
+        LOGGER.warning('Connecting without SSL/TLS encryption.')
+        return True
+
+    def _handshake(self, smtp: SMTP) -> bool:
+        """Perform SMTP handshake."""
+        try:
+            smtp.ehlo()
+            smtp.login(self.login_name, self._passwd)
+        except SMTPException as error:
+            LOGGER.error(str(error))
+            return False
+
+        return True
+
+    def send(self, emails: Iterable[EMail]) -> bool:
+        """Sends emails."""
+        with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
+            if not self._starttls(smtp) or not self._handshake(smtp):
+                return False
+
+            return send_emails(smtp, emails)
