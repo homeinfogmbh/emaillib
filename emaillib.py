@@ -195,4 +195,4 @@ def send_email(smtp: SMTP, email: EMail) -> bool:
 def send_emails(smtp: SMTP, emails: Iterable[EMail]) -> bool:
     """Sends emails via the given SMTP connection."""
 
-    return all(send_email(smtp, email) for email in emails)
+    return all({send_email(smtp, email) for email in emails})
