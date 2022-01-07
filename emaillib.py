@@ -126,8 +126,9 @@ class Mailer:
         if passwd is None:
             raise ValueError('No password specified.')
 
-        ssl = section.getboolean('ssl', fallback=False)
-        return cls(smtp_server, port, login_name, passwd, ssl=ssl)
+        ssl = section.getboolean('ssl', fallback=None)
+        tls = section.getboolean('tls', fallback=None)
+        return cls(smtp_server, port, login_name, passwd, ssl=ssl, tls=tls)
 
     @classmethod
     def from_config(cls, config: ConfigParser) -> Mailer:
