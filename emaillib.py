@@ -9,7 +9,8 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from logging import getLogger
 from smtplib import SMTPException, SMTP
-from typing import Iterable
+from typing import Iterable, Optional
+from warnings import warn
 
 
 __all__ = ['EMail', 'Mailer']
@@ -72,14 +73,28 @@ class EMail(MIMEMultipart):
 class Mailer:
     """A simple SMTP mailer."""
 
-    def __init__(self, smtp_server: str, smtp_port: int, login_name: str,
-                 passwd: str, *, ssl: bool = False):
+    def __init__(
+            self,
+            smtp_server: str,
+            smtp_port: int,
+            login_name: str,
+            passwd: str,
+            *,
+            ssl: Optional[bool] = None,
+            tls: Optional[bool] = None
+        ):
         """Initializes the email with basic content."""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
         self.login_name = login_name
         self._passwd = passwd
+
+        if ssl is not None:
+            warn('Option "ssl" is deprecated. Use "tls" instead.',
+                 DeprecationWarning)
+
         self.ssl = ssl
+        self.tls = tls
 
     def __call__(self, emails: Iterable[EMail]):
         """Alias to self.send()."""
@@ -119,33 +134,58 @@ class Mailer:
         """Returns a new mailer instance from the provided config."""
         return cls.from_section(config['email'])
 
+    def _start_tls(self, smtp: SMTP) -> bool:
+        """Start TLS connection."""
+        try:
+            smtp.starttls()
+        except (SMTPException, RuntimeError, ValueError) as error:
+            LOGGER.error(str(error))
+
+            if self.ssl or self.tls:
+                raise
+
+            return False
+
+        return True
+
+    def _attempt_tls(self, smtp: SMTP) -> bool:
+        """Attempts to initialize a TLS connection."""
+        if self.ssl or self.tls or self.ssl is None or self.tls is None:
+            return self._start_tls(smtp)
+
+        return False
+
+    def _login(self, smtp: SMTP) -> bool:
+        """Attempt to log in at the server."""
+        try:
+            smtp.ehlo()
+            smtp.login(self.login_name, self._passwd)
+        except SMTPException as error:
+            LOGGER.error(str(error))
+            return False
+
+        return True
+
     def send(self, emails: Iterable[EMail]) -> bool:
         """Sends emails."""
-        result = True
-
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
-            if self.ssl:
-                try:
-                    smtp.starttls()
-                except (SMTPException, RuntimeError, ValueError) as error:
-                    LOGGER.error(str(error))
-                    return False
-            else:
+            if not self._attempt_tls(smtp):
                 LOGGER.warning('Connecting without SSL/TLS encryption.')
 
-            try:
-                smtp.ehlo()
-                smtp.login(self.login_name, self._passwd)
-            except SMTPException as error:
-                LOGGER.error(str(error))
+            if not self._login(smtp):
                 return False
 
-            for email in emails:
-                try:
-                    smtp.send_message(email)
-                except SMTPException as error:
-                    LOGGER.warning('Could not send email: %s', email)
-                    LOGGER.error(str(error))
-                    result = False
+            return all(send_email(smtp, email) for email in emails)
 
-        return result
+
+def send_email(smtp: SMTP, email: EMail) -> bool:
+    """Sends the respective email."""
+
+    try:
+        smtp.send_message(email)
+    except SMTPException as error:
+        LOGGER.warning('Could not send email: %s', email)
+        LOGGER.error(str(error))
+        return False
+
+    return True
