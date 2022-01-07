@@ -48,7 +48,7 @@ class EMail(MIMEMultipart):
             self.attach(text_type(plain, 'plain', charset))
 
         if html is not None:
-            self.attach(text_type(plain, 'html', charset))
+            self.attach(text_type(html, 'html', charset))
 
     def __str__(self):
         """Converts the EMail to a string."""
@@ -175,11 +175,11 @@ class Mailer:
             if not self._login(smtp):
                 return False
 
-            return all(send_email(smtp, email) for email in emails)
+            return send_emails(smtp, emails)
 
 
 def send_email(smtp: SMTP, email: EMail) -> bool:
-    """Sends the respective email."""
+    """Sends an email via the given SMTP connection."""
 
     try:
         smtp.send_message(email)
@@ -189,3 +189,9 @@ def send_email(smtp: SMTP, email: EMail) -> bool:
         return False
 
     return True
+
+
+def send_emails(smtp: SMTP, emails: Iterable[EMail]) -> bool:
+    """Sends emails via the given SMTP connection."""
+
+    return all(send_email(smtp, email) for email in emails)
