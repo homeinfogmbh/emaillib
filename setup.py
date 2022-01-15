@@ -4,7 +4,8 @@ from setuptools import setup
 
 setup(
     name='emaillib',
-    version='latest',
+    use_scm_version=True,
+    setup_requires=['setuptools_scm'],
     author='HOMEINFO - Digitale Informationssysteme GmbH',
     author_email='<info@homeinfo.de>',
     maintainer='Richard Neumann',
