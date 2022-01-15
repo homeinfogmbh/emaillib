@@ -1,6 +1,6 @@
 FILE_LIST = ./.installed_files.txt
 
-.PHONY: pull push clean install uninstall
+.PHONY: pull push clean publish install uninstall pypi
 
 default: | pull clean install
 
@@ -13,8 +13,13 @@ uninstall:
 clean:
 	@ rm -Rf ./build
 
+publish:
+	@ twine upload dist/*
+
 pull:
 	@ git pull
 
 push:
 	@ git push
+
+pypi: | build publish clean
