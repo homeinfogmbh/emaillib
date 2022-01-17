@@ -14,10 +14,14 @@ from typing import Iterable, Iterator, Optional
 from warnings import warn
 
 
-__all__ = ['EMail', 'Mailer', 'email_template']
+__all__ = ['LoginError', 'EMailsNotSent', 'EMail', 'Mailer', 'email_template']
 
 
 LOGGER = getLogger('emaillib')
+
+
+class LoginError(Exception):
+    """Indicates an error during login."""
 
 
 class MIMEQPText(MIMENonMultipart):
@@ -67,6 +71,14 @@ class EMail(MIMEMultipart):
     def recipient(self):
         """Returns the Email's recipient."""
         return self['To']
+
+
+class EMailsNotSent(Exception):
+    """Indicates that some emails could not be sent."""
+
+    def __init__(self, emails: Iterable[EMail]):
+        super().__init__('E-Mails not sent:', emails)
+        self.emails = emails
 
 
 class Mailer:
@@ -159,27 +171,23 @@ class Mailer:
 
         return False
 
-    def _login(self, smtp: SMTP) -> bool:
+    def _login(self, smtp: SMTP) -> None:
         """Attempt to log in at the server."""
         try:
             smtp.ehlo()
             smtp.login(self.login_name, self._passwd)
         except SMTPException as error:
             LOGGER.error(str(error))
-            return False
+            raise LoginError() from error
 
-        return True
-
-    def send(self, emails: Iterable[EMail]) -> bool:
+    def send(self, emails: Iterable[EMail]) -> None:
         """Sends emails."""
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if not self._start_tls_if_requested(smtp):
                 LOGGER.warning('Connecting without SSL/TLS encryption.')
 
-            if not self._login(smtp):
-                return False
-
-            return send_emails(smtp, emails)
+            self._login(smtp)
+            send_emails(smtp, emails)
 
 
 def send_email(smtp: SMTP, email: EMail) -> bool:
@@ -195,10 +203,17 @@ def send_email(smtp: SMTP, email: EMail) -> bool:
     return True
 
 
-def send_emails(smtp: SMTP, emails: Iterable[EMail]) -> bool:
+def send_emails(smtp: SMTP, emails: Iterable[EMail]) -> None:
     """Sends emails via the given SMTP connection."""
 
-    return all({send_email(smtp, email) for email in emails})
+    not_sent = []
+
+    for email in emails:
+        if not send_email(smtp, email):
+            not_sent.append(email)
+
+    if not_sent:
+        raise EMailsNotSent(not_sent)
 
 
 @cache
