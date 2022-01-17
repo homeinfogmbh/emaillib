@@ -146,7 +146,7 @@ class Mailer:
             if self.ssl or self.tls:
                 raise
 
-            # If TLS was not explicitly requested, requested, return False
+            # If TLS was not explicitly requested, return False
             # to make the caller issue a warning.
             return False
 
