@@ -139,7 +139,7 @@ class Mailer:
         try:
             smtp.starttls()
         except (SMTPException, RuntimeError, ValueError) as error:
-            LOGGER.error(str(error))
+            LOGGER.error('Error during STARTTLS: %s', error)
 
             if self.ssl or self.tls:
                 raise
@@ -148,7 +148,7 @@ class Mailer:
 
         return True
 
-    def _attempt_tls(self, smtp: SMTP) -> bool:
+    def _start_tls_if_requested(self, smtp: SMTP) -> bool:
         """Attempts to initialize a TLS connection."""
         if self.ssl or self.tls or self.ssl is None or self.tls is None:
             return self._start_tls(smtp)
@@ -169,7 +169,7 @@ class Mailer:
     def send(self, emails: Iterable[EMail]) -> bool:
         """Sends emails."""
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
-            if not self._attempt_tls(smtp):
+            if not self._start_tls_if_requested(smtp):
                 LOGGER.warning('Connecting without SSL/TLS encryption.')
 
             if not self._login(smtp):
