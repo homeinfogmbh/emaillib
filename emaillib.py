@@ -1,4 +1,4 @@
-"""Library for e-mailing."""
+"""Library for emailing."""
 
 from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
