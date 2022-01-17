@@ -141,9 +141,13 @@ class Mailer:
         except (SMTPException, RuntimeError, ValueError) as error:
             LOGGER.error('Error during STARTTLS: %s', error)
 
+            # If TLS was explicitly requested, re-raise
+            # the exception and fail.
             if self.ssl or self.tls:
                 raise
 
+            # If TLS was not explicitly requested, requested, return False
+            # to make the caller issue a warning.
             return False
 
         return True
