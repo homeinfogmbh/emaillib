@@ -7,6 +7,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from functools import cache
 from logging import getLogger
 from smtplib import SMTPException, SMTP
 from typing import Iterable, Optional
@@ -25,9 +26,7 @@ class MIMEQPText(MIMENonMultipart):
     def __init__(self, payload: str, subtype: str = 'plain',
                  charset: str = 'utf-8'):
         super().__init__('text', subtype, charset=charset)
-        utf8qp = Charset(charset)
-        utf8qp.body_encoding = QP
-        self.set_payload(payload, charset=utf8qp)
+        self.set_payload(payload, charset=get_qp_charset(charset))
 
 
 class EMail(MIMEMultipart):
@@ -196,3 +195,12 @@ def send_emails(smtp: SMTP, emails: Iterable[EMail]) -> bool:
     """Sends emails via the given SMTP connection."""
 
     return all({send_email(smtp, email) for email in emails})
+
+
+@cache
+def get_qp_charset(charset: str) -> Charset:
+    """Returns a quoted printable charset."""
+
+    qp_charset = Charset(charset)
+    qp_charset.body_encoding = QP
+    return qp_charset
