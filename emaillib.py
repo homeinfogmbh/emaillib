@@ -36,7 +36,7 @@ class EMail(MIMEMultipart):
                  plain: str = None, html: str = None, charset: str = 'utf-8',
                  quoted_printable: bool = False):
         """Creates a new EMail."""
-        super().__init__(self, subtype='alternative')
+        super().__init__(subtype='alternative')
         self['Subject'] = subject
         self['From'] = sender
         self['To'] = recipient
