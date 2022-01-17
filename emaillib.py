@@ -153,7 +153,7 @@ class Mailer:
         return True
 
     def _start_tls_if_requested(self, smtp: SMTP) -> bool:
-        """Attempts to initialize a TLS connection."""
+        """Start a TLS connection if requested."""
         if self.ssl or self.tls or self.ssl is None or self.tls is None:
             return self._start_tls(smtp)
 
