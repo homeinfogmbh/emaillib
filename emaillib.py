@@ -14,14 +14,10 @@ from typing import Iterable, Iterator, Optional
 from warnings import warn
 
 
-__all__ = ['LoginError', 'EMailsNotSent', 'EMail', 'Mailer', 'email_template']
+__all__ = ['EMailsNotSent', 'EMail', 'Mailer', 'email_template']
 
 
 LOGGER = getLogger('emaillib')
-
-
-class LoginError(Exception):
-    """Indicates an error during login."""
 
 
 class MIMEQPText(MIMENonMultipart):
@@ -175,10 +171,15 @@ class Mailer:
         """Attempt to log in at the server."""
         try:
             smtp.ehlo()
+        except SMTPException as error:
+            LOGGER.error('Error during EHLO: %s', error)
+            raise
+
+        try:
             smtp.login(self.login_name, self._passwd)
         except SMTPException as error:
-            LOGGER.error(str(error))
-            raise LoginError() from error
+            LOGGER.error('Error during login: %s', error)
+            raise
 
     def send(self, emails: Iterable[EMail]) -> None:
         """Sends emails."""
