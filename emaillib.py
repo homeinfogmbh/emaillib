@@ -106,29 +106,29 @@ class Mailer:
     @classmethod
     def from_section(cls, section: SectionProxy) -> Mailer:
         """Returns a new mailer instance from the provided config section."""
-        smtp_server = section.get('smtp_server', section.get('host'))
 
-        if smtp_server is None:
+        if (smtp_server := section.get(
+                'smtp_server', section.get('host')
+        )) is None:
             raise ValueError('No SMTP server specified.')
 
-        port = section.getint('smtp_port', fallback=section.getint('port'))
-
-        if port is None:
+        if (port := section.getint(
+                'smtp_port', section.getint('port')
+        )) is None:
             raise ValueError('No SMTP port specified.')
 
-        login_name = section.get('login_name', section.get('user'))
-
-        if login_name is None:
+        if (login_name := section.get(
+                'login_name', section.get('user')
+        )) is None:
             raise ValueError('No login nane specified.')
 
-        passwd = section.get('passwd', section.get('password'))
-
-        if passwd is None:
+        if (passwd := section.get('passwd', section.get('password'))) is None:
             raise ValueError('No password specified.')
 
-        ssl = section.getboolean('ssl', fallback=None)
-        tls = section.getboolean('tls', fallback=None)
-        return cls(smtp_server, port, login_name, passwd, ssl=ssl, tls=tls)
+        return cls(
+            smtp_server, port, login_name, passwd,
+            ssl=section.getboolean('ssl'), tls=section.getboolean('tls')
+        )
 
     @classmethod
     def from_config(cls, config: ConfigParser) -> Mailer:
