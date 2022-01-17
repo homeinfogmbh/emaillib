@@ -81,7 +81,7 @@ class Mailer:
             *,
             ssl: Optional[bool] = None,
             tls: Optional[bool] = None
-        ):
+    ):
         """Initializes the email with basic content."""
         self.smtp_server = smtp_server
         self.smtp_port = smtp_port
