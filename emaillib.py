@@ -1,4 +1,4 @@
-"""Library for e-mailing."""
+"""Library for emailing."""
 
 from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
@@ -11,11 +11,11 @@ from email.utils import formatdate
 from functools import cache, partial
 from logging import getLogger
 from smtplib import SMTPException, SMTP
-from typing import Iterable, Iterator, Optional
+from typing import Iterable, Optional
 from warnings import warn
 
 
-__all__ = ['EMailsNotSent', 'EMail', 'Mailer', 'email_template']
+__all__ = ['EMailsNotSent', 'EMail', 'Mailer']
 
 
 LOGGER = getLogger('emaillib')
@@ -219,26 +219,3 @@ def get_qp_charset(charset: str) -> Charset:
     qp_charset = Charset(charset)
     qp_charset.body_encoding = QP
     return qp_charset
-
-
-def email_template(
-        subject: str,
-        sender: str,
-        *,
-        plain: str = None,
-        html: str = None,
-        charset: str = 'utf-8',
-        quoted_printable: bool = False
-):
-    """Generate a closure for an email template."""
-
-    def generate_emails(recipients: Iterable[str]) -> Iterator[EMail]:
-        """Yield generated emails."""
-
-        for recipient in recipients:
-            yield EMail(
-                subject, sender, recipient, plain=plain, html=html,
-                charset=charset, quoted_printable=quoted_printable
-            )
-
-    return generate_emails
