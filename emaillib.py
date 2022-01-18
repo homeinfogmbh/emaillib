@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
+from dataclasses import dataclass
 from email.charset import Charset, QP
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
@@ -29,44 +30,34 @@ class MIMEQPText(MIMENonMultipart):
         self.set_payload(payload, charset=get_qp_charset(charset))
 
 
-class EMail(MIMEMultipart):
+@dataclass
+class EMail:
     """Email data for Mailer."""
 
-    def __init__(self, subject: str, sender: str, recipient: str, *,
-                 plain: str = None, html: str = None, charset: str = 'utf-8',
-                 quoted_printable: bool = False):
-        """Creates a new EMail."""
-        super().__init__(subtype='alternative')
-        self['Subject'] = subject
-        self['From'] = sender
-        self['To'] = recipient
-        self['Date'] = formatdate(localtime=True, usegmt=True)
-        text_type = MIMEQPText if quoted_printable else MIMEText
+    subject: str
+    sender: str
+    recipient: str
+    plain: Optional[str] = None
+    html: Optional[str] = None
+    charset: str = 'utf-8'
+    quoted_printable: bool = False
 
-        if plain is not None:
-            self.attach(text_type(plain, 'plain', charset))
+    def to_mime_multipart(self) -> MIMEMultipart:
+        """Returns a MIMEMultipart object for sending."""
+        mime_multipart = MIMEMultipart(subtype='alternative')
+        mime_multipart['Subject'] = self.subject
+        mime_multipart['From'] = self.sender
+        mime_multipart['To'] = self.recipient
+        mime_multipart['Date'] = formatdate(localtime=True, usegmt=True)
+        text_type = MIMEQPText if self.quoted_printable else MIMEText
 
-        if html is not None:
-            self.attach(text_type(html, 'html', charset))
+        if self.plain is not None:
+            mime_multipart.attach(text_type(self.plain, 'plain', self.charset))
 
-    def __str__(self):
-        """Converts the EMail to a string."""
-        return self.as_string()
+        if self.html is not None:
+            mime_multipart.attach(text_type(self.html, 'html', self.charset))
 
-    @property
-    def subject(self):
-        """Returns the Email's subject."""
-        return self['Subject']
-
-    @property
-    def sender(self):
-        """Returns the Email's sender."""
-        return self['From']
-
-    @property
-    def recipient(self):
-        """Returns the Email's recipient."""
-        return self['To']
+        return mime_multipart
 
 
 class EMailsNotSent(Exception):
@@ -195,7 +186,7 @@ def send_email(smtp: SMTP, email: EMail) -> bool:
     """Sends an email via the given SMTP connection."""
 
     try:
-        smtp.send_message(email)
+        smtp.send_message(email.to_mime_multipart())
     except SMTPException as error:
         LOGGER.warning('Could not send email: %s', email)
         LOGGER.error(str(error))
