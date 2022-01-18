@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
-from dataclasses import dataclass
+from dataclasses import KW_ONLY, dataclass, field
 from email.charset import Charset, QP
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from functools import cache
+from functools import cache, partial
 from logging import getLogger
 from smtplib import SMTPException, SMTP
 from typing import Iterable, Iterator, Optional
@@ -41,6 +41,10 @@ class EMail:
     html: Optional[str] = None
     charset: str = 'utf-8'
     quoted_printable: bool = False
+    _: KW_ONLY = None
+    timestamp: str = field(default_factory=partial(
+        formatdate, localtime=True, usegmt=True
+    ))
 
     def to_mime_multipart(self) -> MIMEMultipart:
         """Returns a MIMEMultipart object for sending."""
@@ -48,7 +52,7 @@ class EMail:
         mime_multipart['Subject'] = self.subject
         mime_multipart['From'] = self.sender
         mime_multipart['To'] = self.recipient
-        mime_multipart['Date'] = formatdate(localtime=True, usegmt=True)
+        mime_multipart['Date'] = self.timestamp
         text_type = MIMEQPText if self.quoted_printable else MIMEText
 
         if self.plain is not None:
