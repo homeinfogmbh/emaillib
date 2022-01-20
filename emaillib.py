@@ -11,7 +11,7 @@ from email.utils import formatdate
 from functools import cache, partial
 from logging import getLogger
 from smtplib import SMTPException, SMTP
-from typing import Iterable, Optional
+from typing import Iterable, Optional, Union
 from warnings import warn
 
 
@@ -175,7 +175,7 @@ class Mailer:
             LOGGER.error('Error during login: %s', error)
             raise
 
-    def send(self, emails: Iterable[EMail | MIMEMultipart]) -> None:
+    def send(self, emails: Iterable[Union[EMail, MIMEMultipart]]) -> None:
         """Sends emails."""
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if not self._start_tls_if_requested(smtp):
@@ -185,7 +185,7 @@ class Mailer:
             send_emails(smtp, emails)
 
 
-def send_email(smtp: SMTP, email: EMail | MIMEMultipart) -> bool:
+def send_email(smtp: SMTP, email: Union[EMail, MIMEMultipart]) -> bool:
     """Sends an email via the given SMTP connection."""
 
     if isinstance(email, EMail):
@@ -201,7 +201,9 @@ def send_email(smtp: SMTP, email: EMail | MIMEMultipart) -> bool:
     return True
 
 
-def send_emails(smtp: SMTP, emails: Iterable[EMail | MIMEMultipart]) -> None:
+def send_emails(
+        smtp: SMTP, emails: Iterable[Union[EMail, MIMEMultipart]]
+) -> None:
     """Sends emails via the given SMTP connection."""
 
     not_sent = []
