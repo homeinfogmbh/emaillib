@@ -189,7 +189,7 @@ def send_email(smtp: SMTP, email: EMail) -> bool:
     """Sends an email via the given SMTP connection."""
 
     try:
-        smtp.send_message(email.to_mime_multipart())
+        smtp.send_message(email)
     except SMTPException as error:
         LOGGER.warning('Could not send email: %s', email)
         LOGGER.error(str(error))
