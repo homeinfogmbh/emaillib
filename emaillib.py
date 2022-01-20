@@ -62,10 +62,6 @@ class EMail:
 
         return mime_multipart
 
-    def get_all(self, name: str, failobj: object = None) -> list:
-        """Delegate to the MIMEMultipart object."""
-        return self.to_mime_multipart().get_all(name, failobj=failobj)
-
 
 class EMailsNotSent(Exception):
     """Indicates that some emails could not be sent."""
@@ -179,7 +175,7 @@ class Mailer:
             LOGGER.error('Error during login: %s', error)
             raise
 
-    def send(self, emails: Iterable[EMail]) -> None:
+    def send(self, emails: Iterable[EMail | MIMEMultipart]) -> None:
         """Sends emails."""
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if not self._start_tls_if_requested(smtp):
@@ -189,8 +185,11 @@ class Mailer:
             send_emails(smtp, emails)
 
 
-def send_email(smtp: SMTP, email: EMail) -> bool:
+def send_email(smtp: SMTP, email: EMail | MIMEMultipart) -> bool:
     """Sends an email via the given SMTP connection."""
+
+    if isinstance(email, EMail):
+        return send_email(smtp, email.to_mime_multipart())
 
     try:
         smtp.send_message(email)
@@ -202,7 +201,7 @@ def send_email(smtp: SMTP, email: EMail) -> bool:
     return True
 
 
-def send_emails(smtp: SMTP, emails: Iterable[EMail]) -> None:
+def send_emails(smtp: SMTP, emails: Iterable[EMail | MIMEMultipart]) -> None:
     """Sends emails via the given SMTP connection."""
 
     not_sent = []
