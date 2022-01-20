@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
-from dataclasses import KW_ONLY, dataclass, field
+from dataclasses import dataclass, field
 from email.charset import Charset, QP
 from email.mime.multipart import MIMEMultipart
 from email.mime.nonmultipart import MIMENonMultipart
@@ -41,7 +41,6 @@ class EMail:
     html: Optional[str] = None
     charset: str = 'utf-8'
     quoted_printable: bool = False
-    _: KW_ONLY = None
     timestamp: str = field(default_factory=partial(
         formatdate, localtime=True, usegmt=True
     ))
