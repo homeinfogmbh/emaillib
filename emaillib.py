@@ -62,6 +62,10 @@ class EMail:
 
         return mime_multipart
 
+    def get_all(self, name: str, failobj: object = None) -> list:
+        """Delegate to the MIMEMultipart object."""
+        return self.to_mime_multipart().get_all(name, failobj=failobj)
+
 
 class EMailsNotSent(Exception):
     """Indicates that some emails could not be sent."""
