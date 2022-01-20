@@ -1,6 +1,5 @@
 """Library for emailing."""
 
-from __future__ import annotations
 from configparser import ConfigParser, SectionProxy
 from dataclasses import dataclass, field
 from email.charset import Charset, QP
@@ -105,7 +104,7 @@ class Mailer:
         return f'{self.login_name}:*****@{self.smtp_server}:{self.smtp_port}'
 
     @classmethod
-    def from_section(cls, section: SectionProxy) -> Mailer:
+    def from_section(cls, section: SectionProxy) -> 'Mailer':
         """Returns a new mailer instance from the provided config section."""
 
         if (smtp_server := section.get(
@@ -132,7 +131,7 @@ class Mailer:
         )
 
     @classmethod
-    def from_config(cls, config: ConfigParser) -> Mailer:
+    def from_config(cls, config: ConfigParser) -> 'Mailer':
         """Returns a new mailer instance from the provided config."""
         return cls.from_section(config['email'])
 
