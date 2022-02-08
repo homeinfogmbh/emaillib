@@ -36,6 +36,7 @@ class EMail:
     subject: str
     sender: str
     recipient: str
+    reply_to: Optional[str] = None
     plain: Optional[str] = None
     html: Optional[str] = None
     charset: str = 'utf-8'
@@ -50,6 +51,10 @@ class EMail:
         mime_multipart['Subject'] = self.subject
         mime_multipart['From'] = self.sender
         mime_multipart['To'] = self.recipient
+
+        if self.reply_to is not None:
+            mime_multipart['Reply-To'] = self.reply_to
+
         mime_multipart['Date'] = self.timestamp
         text_type = MIMEQPText if self.quoted_printable else MIMEText
 
