@@ -29,7 +29,7 @@ class MIMEQPText(MIMENonMultipart):
         self.set_payload(payload, charset=get_qp_charset(charset))
 
 
-@dataclass
+@dataclass(unsafe_hash=True)
 class EMail:
     """Email data for Mailer."""
 
