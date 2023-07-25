@@ -14,18 +14,17 @@ from typing import Iterable, Optional, Union
 from warnings import warn
 
 
-__all__ = ['EMailsNotSent', 'EMail', 'Mailer']
+__all__ = ["EMailsNotSent", "EMail", "Mailer"]
 
 
-LOGGER = getLogger('emaillib')
+LOGGER = getLogger("emaillib")
 
 
 class MIMEQPText(MIMENonMultipart):
     """A quoted-printable encoded text."""
 
-    def __init__(self, payload: str, subtype: str = 'plain',
-                 charset: str = 'utf-8'):
-        super().__init__('text', subtype, charset=charset)
+    def __init__(self, payload: str, subtype: str = "plain", charset: str = "utf-8"):
+        super().__init__("text", subtype, charset=charset)
         self.set_payload(payload, charset=get_qp_charset(charset))
 
 
@@ -39,30 +38,30 @@ class EMail:
     reply_to: Optional[str] = None
     plain: Optional[str] = None
     html: Optional[str] = None
-    charset: str = 'utf-8'
+    charset: str = "utf-8"
     quoted_printable: bool = False
-    timestamp: str = field(default_factory=partial(
-        formatdate, localtime=True, usegmt=True
-    ))
+    timestamp: str = field(
+        default_factory=partial(formatdate, localtime=True, usegmt=True)
+    )
 
     def to_mime_multipart(self) -> MIMEMultipart:
         """Returns a MIMEMultipart object for sending."""
-        mime_multipart = MIMEMultipart(subtype='alternative')
-        mime_multipart['Subject'] = self.subject
-        mime_multipart['From'] = self.sender
-        mime_multipart['To'] = self.recipient
+        mime_multipart = MIMEMultipart(subtype="alternative")
+        mime_multipart["Subject"] = self.subject
+        mime_multipart["From"] = self.sender
+        mime_multipart["To"] = self.recipient
 
         if self.reply_to is not None:
-            mime_multipart['Reply-To'] = self.reply_to
+            mime_multipart["Reply-To"] = self.reply_to
 
-        mime_multipart['Date'] = self.timestamp
+        mime_multipart["Date"] = self.timestamp
         text_type = MIMEQPText if self.quoted_printable else MIMEText
 
         if self.plain is not None:
-            mime_multipart.attach(text_type(self.plain, 'plain', self.charset))
+            mime_multipart.attach(text_type(self.plain, "plain", self.charset))
 
         if self.html is not None:
-            mime_multipart.attach(text_type(self.html, 'html', self.charset))
+            mime_multipart.attach(text_type(self.html, "html", self.charset))
 
         return mime_multipart
 
@@ -71,7 +70,7 @@ class EMailsNotSent(Exception):
     """Indicates that some emails could not be sent."""
 
     def __init__(self, emails: Iterable[EMail]):
-        super().__init__('E-Mails not sent:', emails)
+        super().__init__("E-Mails not sent:", emails)
         self.emails = emails
 
 
@@ -79,14 +78,14 @@ class Mailer:
     """A simple SMTP mailer."""
 
     def __init__(
-            self,
-            smtp_server: str,
-            smtp_port: int,
-            login_name: str,
-            passwd: str,
-            *,
-            ssl: Optional[bool] = None,
-            tls: Optional[bool] = None
+        self,
+        smtp_server: str,
+        smtp_port: int,
+        login_name: str,
+        passwd: str,
+        *,
+        ssl: Optional[bool] = None,
+        tls: Optional[bool] = None,
     ):
         """Initializes the email with basic content."""
         self.smtp_server = smtp_server
@@ -95,8 +94,7 @@ class Mailer:
         self._passwd = passwd
 
         if ssl is not None:
-            warn('Option "ssl" is deprecated. Use "tls" instead.',
-                 DeprecationWarning)
+            warn('Option "ssl" is deprecated. Use "tls" instead.', DeprecationWarning)
 
         self.ssl = ssl
         self.tls = tls
@@ -106,46 +104,44 @@ class Mailer:
         return self.send(emails)
 
     def __str__(self):
-        return f'{self.login_name}:*****@{self.smtp_server}:{self.smtp_port}'
+        return f"{self.login_name}:*****@{self.smtp_server}:{self.smtp_port}"
 
     @classmethod
-    def from_section(cls, section: SectionProxy) -> 'Mailer':
+    def from_section(cls, section: SectionProxy) -> "Mailer":
         """Returns a new mailer instance from the provided config section."""
 
-        if (smtp_server := section.get(
-                'smtp_server', section.get('host')
-        )) is None:
-            raise ValueError('No SMTP server specified.')
+        if (smtp_server := section.get("smtp_server", section.get("host"))) is None:
+            raise ValueError("No SMTP server specified.")
 
-        if (port := section.getint(
-                'smtp_port', section.getint('port')
-        )) is None:
-            raise ValueError('No SMTP port specified.')
+        if (port := section.getint("smtp_port", section.getint("port"))) is None:
+            raise ValueError("No SMTP port specified.")
 
-        if (login_name := section.get(
-                'login_name', section.get('user')
-        )) is None:
-            raise ValueError('No login nane specified.')
+        if (login_name := section.get("login_name", section.get("user"))) is None:
+            raise ValueError("No login nane specified.")
 
-        if (passwd := section.get('passwd', section.get('password'))) is None:
-            raise ValueError('No password specified.')
+        if (passwd := section.get("passwd", section.get("password"))) is None:
+            raise ValueError("No password specified.")
 
         return cls(
-            smtp_server, port, login_name, passwd,
-            ssl=section.getboolean('ssl'), tls=section.getboolean('tls')
+            smtp_server,
+            port,
+            login_name,
+            passwd,
+            ssl=section.getboolean("ssl"),
+            tls=section.getboolean("tls"),
         )
 
     @classmethod
-    def from_config(cls, config: ConfigParser) -> 'Mailer':
+    def from_config(cls, config: ConfigParser) -> "Mailer":
         """Returns a new mailer instance from the provided config."""
-        return cls.from_section(config['email'])
+        return cls.from_section(config["email"])
 
     def _start_tls(self, smtp: SMTP) -> bool:
         """Start TLS connection."""
         try:
             smtp.starttls()
         except (SMTPException, RuntimeError, ValueError) as error:
-            LOGGER.error('Error during STARTTLS: %s', error)
+            LOGGER.error("Error during STARTTLS: %s", error)
 
             # If TLS was explicitly requested, re-raise
             # the exception and fail.
@@ -170,20 +166,20 @@ class Mailer:
         try:
             smtp.ehlo()
         except SMTPException as error:
-            LOGGER.error('Error during EHLO: %s', error)
+            LOGGER.error("Error during EHLO: %s", error)
             raise
 
         try:
             smtp.login(self.login_name, self._passwd)
         except SMTPException as error:
-            LOGGER.error('Error during login: %s', error)
+            LOGGER.error("Error during login: %s", error)
             raise
 
     def send(self, emails: Iterable[Union[EMail, MIMEMultipart]]) -> None:
         """Sends emails."""
         with SMTP(host=self.smtp_server, port=self.smtp_port) as smtp:
             if not self._start_tls_if_requested(smtp):
-                LOGGER.warning('Connecting without SSL/TLS encryption.')
+                LOGGER.warning("Connecting without SSL/TLS encryption.")
 
             self._login(smtp)
             send_emails(smtp, emails)
@@ -198,16 +194,14 @@ def send_email(smtp: SMTP, email: Union[EMail, MIMEMultipart]) -> bool:
     try:
         smtp.send_message(email)
     except SMTPException as error:
-        LOGGER.warning('Could not send email: %s', email)
+        LOGGER.warning("Could not send email: %s", email)
         LOGGER.error(str(error))
         return False
 
     return True
 
 
-def send_emails(
-        smtp: SMTP, emails: Iterable[Union[EMail, MIMEMultipart]]
-) -> None:
+def send_emails(smtp: SMTP, emails: Iterable[Union[EMail, MIMEMultipart]]) -> None:
     """Sends emails via the given SMTP connection."""
 
     not_sent = []
